@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HEAVY MARINE UTILITIES | Intake Terminal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #040404;
+            --surface: #080808;
+            --accent: #b33a1a;
+            --accent-dim: rgba(179,58,26,0.15);
+            --bone: #e8e4de;
+            --dim: #5a5a5a;
+            --border: #141414;
+            --mono: 'IBM Plex Mono', 'Courier New', monospace;
+            --display: 'Bebas Neue', 'Helvetica Neue', Arial, sans-serif;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; cursor: none; }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            background-color: var(--bg);
+            color: var(--bone);
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ─── NOISE GRAIN OVERLAY ─── */
+        body::after {
+            content: '';
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 9990;
+            opacity: 0.045;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+            background-size: 180px 180px;
+        }
+
+        /* ─── SCANLINES ─── */
+        .scanlines {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 9989;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent, transparent 2px,
+                rgba(0,0,0,0.06) 2px, rgba(0,0,0,0.06) 4px
+            );
+        }
+
+        /* ─── LOADING SCREEN ─── */
+        #loader {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 99999;
+            display: flex; flex-direction: column; justify-content: center; align-items: flex-start;
+            padding: 10vw;
+            font-family: var(--mono); color: var(--accent);
+            transition: opacity 0.8s ease, visibility 0.8s ease;
+        }
+        #loader.hidden { opacity: 0; visibility: hidden; }
+        .loader-line { font-size: clamp(0.65rem, 1.2vw, 0.85rem); margin-bottom: 8px; overflow: hidden; white-space: nowrap; width: 0; }
+        .loader-line.typed { width: auto; animation: typeOut 0.6s steps(40, end) forwards; }
+        .loader-progress { margin-top: 40px; width: 300px; height: 1px; background: #111; }
+        .loader-bar { height: 100%; background: var(--accent); width: 0%; transition: width 2.2s cubic-bezier(0.4,0,0.2,1); }
+        @keyframes typeOut { from { width: 0 } to { width: 100% } }
+
+        /* ─── HUD CURSOR ─── */
+        #hud-cursor {
+            position: fixed; pointer-events: none; z-index: 10000;
+            display: flex; flex-direction: column;
+            transform: translate(18px, 18px);
+        }
+        .crosshair {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            pointer-events: none; z-index: 9999;
+        }
+        .ch-h, .ch-v { position: absolute; background: rgba(179, 58, 26, 0.18); }
+        .ch-h { width: 100%; height: 1px; }
+        .ch-v { height: 100%; width: 1px; }
+        .coordinate-data {
+            font-family: var(--mono); font-size: 0.58rem;
+            background: rgba(0,0,0,0.95); color: var(--accent);
+            padding: 3px 7px; border: 1px solid rgba(179,58,26,0.5);
+            text-transform: uppercase; margin-bottom: 2px; letter-spacing: 1px;
+        }
+
+        /* ─── NAV ─── */
+        nav {
+            position: fixed; top: 0; width: 100%;
+            padding: 22px 5vw;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 100;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.95), transparent);
+            font-family: var(--mono); font-size: 0.72rem;
+            letter-spacing: 3px; text-transform: uppercase;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        .nav-brand { display: flex; align-items: center; gap: 12px; }
+        .nav-dot { width: 6px; height: 6px; background: var(--accent); border-radius: 50%; animation: pulse 2s ease-in-out infinite; }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+        .nav-right { color: var(--dim); }
+        .nav-right span { color: var(--accent); }
+
+        /* ─── HERO ─── */
+        .hero {
+            position: relative; width: 100vw; height: 100vh;
+            display: flex; flex-direction: column; justify-content: flex-end;
+            padding: 0 8vw 10vh;
+            overflow: hidden;
+        }
+        .hero-bg {
+            position: absolute; top: 0; left: 0; width: 100%; height: 115%;
+            background-image: url('https://images.unsplash.com/photo-1511311032892-944485065c71?q=90&w=2400&auto=format&fit=crop');
+            background-size: cover; background-position: center top;
+            transform: translateY(0);
+            will-change: transform;
+        }
+        .hero-bg::after {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(
+                to top,
+                rgba(4,4,4,1) 0%,
+                rgba(4,4,4,0.7) 30%,
+                rgba(4,4,4,0.2) 60%,
+                rgba(4,4,4,0.5) 100%
+            );
+        }
+        .hero-content { position: relative; z-index: 2; }
+        .hero-eyebrow {
+            font-family: var(--mono); color: var(--accent);
+            font-size: 0.75rem; letter-spacing: 6px;
+            text-transform: uppercase; margin-bottom: 20px;
+            display: flex; align-items: center; gap: 15px;
+        }
+        .hero-eyebrow::before { content: ''; display: block; width: 40px; height: 1px; background: var(--accent); }
+        .hero h1 {
+            font-family: var(--display);
+            font-size: clamp(5rem, 14vw, 13rem);
+            font-weight: 400;
+            line-height: 0.88;
+            text-transform: uppercase;
+            letter-spacing: -2px;
+            color: var(--bone);
+            position: relative;
+        }
+        /* Glitch layers */
+        .hero h1::before,
+        .hero h1::after {
+            content: attr(data-text);
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%;
+            font-family: var(--display);
+            font-size: inherit;
+        }
+        .hero h1::before {
+            color: #ff3a1a; clip-path: inset(45% 0 47% 0);
+            animation: glitch-1 4s infinite; opacity: 0.7;
+        }
+        .hero h1::after {
+            color: #1a88ff; clip-path: inset(20% 0 70% 0);
+            animation: glitch-2 4s infinite; opacity: 0.5;
+        }
+        @keyframes glitch-1 {
+            0%,90%,100%{ transform: translate(0); clip-path: inset(45% 0 47% 0); }
+            91%{ transform: translate(-3px,0); clip-path: inset(15% 0 60% 0); }
+            92%{ transform: translate(3px,0); clip-path: inset(70% 0 10% 0); }
+            93%{ transform: translate(0); clip-path: inset(45% 0 47% 0); }
+        }
+        @keyframes glitch-2 {
+            0%,88%,100%{ transform: translate(0); clip-path: inset(20% 0 70% 0); }
+            89%{ transform: translate(3px,0); clip-path: inset(60% 0 25% 0); }
+            90%{ transform: translate(-3px,0); clip-path: inset(35% 0 50% 0); }
+            91%{ transform: translate(0); clip-path: inset(20% 0 70% 0); }
+        }
+        .hero-sub {
+            font-family: var(--mono); color: var(--accent);
+            margin-top: 25px; letter-spacing: 5px;
+            text-transform: uppercase; font-size: 0.9rem;
+            border-left: 3px solid var(--accent);
+            padding-left: 20px; display: inline-block;
+        }
+        .hero-scroll {
+            position: absolute; bottom: 40px; right: 5vw;
+            font-family: var(--mono); font-size: 0.6rem;
+            color: var(--dim); letter-spacing: 3px;
+            text-transform: uppercase; writing-mode: vertical-rl;
+            display: flex; align-items: center; gap: 10px;
+            z-index: 2;
+        }
+        .hero-scroll::after { content: ''; display: block; width: 1px; height: 60px; background: var(--dim); }
+
+        /* ─── MARQUEE ─── */
+        .marquee-strip {
+            width: 100%; overflow: hidden;
+            background: var(--accent); padding: 14px 0;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            border-bottom: 1px solid rgba(0,0,0,0.5);
+        }
+        .marquee-track {
+            display: flex; white-space: nowrap;
+            animation: marquee 35s linear infinite;
+        }
+        .marquee-track span {
+            font-family: var(--mono); font-size: 0.72rem;
+            letter-spacing: 4px; text-transform: uppercase;
+            color: #000; font-weight: 700; padding: 0 30px;
+        }
+        .marquee-track span.sep { color: rgba(0,0,0,0.4); }
+        @keyframes marquee { from { transform: translateX(0) } to { transform: translateX(-50%) } }
+
+        /* ─── STATS ─── */
+        .stats {
+            display: grid; grid-template-columns: repeat(4, 1fr);
+            background: var(--surface); border-top: 1px solid var(--border);
+        }
+        .stat-block {
+            padding: 60px 40px;
+            border-right: 1px solid var(--border);
+            display: flex; flex-direction: column; gap: 10px;
+            opacity: 0; transform: translateY(30px);
+            transition: 0.7s cubic-bezier(0.16,1,0.3,1);
+        }
+        .stat-block.visible { opacity: 1; transform: translateY(0); }
+        .stat-block:last-child { border-right: none; }
+        .stat-num {
+            font-family: var(--display); font-size: 4.5rem;
+            color: var(--accent); line-height: 1; letter-spacing: -1px;
+        }
+        .stat-label {
+            font-family: var(--mono); font-size: 0.65rem;
+            color: var(--dim); letter-spacing: 3px; text-transform: uppercase;
+        }
+
+        /* ─── MANIFESTO ─── */
+        .manifesto {
+            padding: 130px 8vw;
+            display: grid; grid-template-columns: 1fr 1.6fr;
+            gap: 80px; align-items: start;
+            border-top: 1px solid var(--border);
+        }
+        .manifesto-header { position: sticky; top: 120px; }
+        .manifesto-header .section-tag {
+            font-family: var(--mono); color: var(--accent); font-size: 0.65rem;
+            letter-spacing: 5px; text-transform: uppercase; margin-bottom: 25px;
+        }
+        .manifesto-header h2 {
+            font-family: var(--display);
+            font-size: clamp(3rem, 5vw, 5.5rem);
+            text-transform: uppercase; line-height: 0.9;
+            color: var(--bone);
+            opacity: 0; transform: translateX(-30px);
+            transition: 0.8s cubic-bezier(0.16,1,0.3,1);
+        }
+        .manifesto-header h2.visible { opacity: 1; transform: translateX(0); }
+        .manifesto-header .big-number {
+            font-family: var(--display); font-size: 12rem;
+            color: var(--border); line-height: 1;
+            margin-top: 20px; user-select: none;
+            border-top: 1px solid var(--border); padding-top: 20px;
+        }
+        .m-content p {
+            font-size: 1.15rem; line-height: 1.85; color: rgba(232,228,222,0.75);
+            margin-bottom: 30px; text-align: justify;
+            opacity: 0; transform: translateY(20px);
+            transition: 0.7s cubic-bezier(0.16,1,0.3,1);
+        }
+        .m-content p.visible { opacity: 1; transform: translateY(0); }
+        .m-content b { color: var(--accent); font-weight: 700; }
+
+        /* ─── PROCESS ─── */
+        .process { padding: 120px 5%; background: var(--bg); border-top: 1px solid var(--border); }
+        .section-header {
+            display: flex; justify-content: space-between; align-items: flex-end;
+            margin-bottom: 70px; padding-bottom: 30px; border-bottom: 1px solid var(--border);
+        }
+        .section-header h2 {
+            font-family: var(--display); font-size: clamp(2.5rem, 5vw, 5rem);
+            text-transform: uppercase; line-height: 0.9;
+        }
+        .section-header .s-tag {
+            font-family: var(--mono); color: var(--dim); font-size: 0.65rem;
+            letter-spacing: 4px; text-transform: uppercase;
+        }
+        .process-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; }
+        .process-card {
+            position: relative; overflow: hidden; aspect-ratio: 3/4;
+            opacity: 0; transform: translateY(40px);
+            transition: 0.8s cubic-bezier(0.16,1,0.3,1);
+        }
+        .process-card.visible { opacity: 1; transform: translateY(0); }
+        .process-card:nth-child(2) { transition-delay: 0.15s; }
+        .process-card:nth-child(3) { transition-delay: 0.3s; }
+        .process-card img {
+            width: 100%; height: 100%; object-fit: cover;
+            filter: grayscale(1) brightness(0.5);
+            transition: 0.9s cubic-bezier(0.16,1,0.3,1);
+        }
+        .process-card:hover img { filter: grayscale(0.3) brightness(0.7); transform: scale(1.06); }
+        .process-card-body {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            padding: 40px 30px;
+            background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, transparent 100%);
+        }
+        .process-step {
+            font-family: var(--mono); color: var(--accent);
+            font-size: 0.65rem; letter-spacing: 4px;
+            text-transform: uppercase; margin-bottom: 12px;
+        }
+        .process-card-body h3 {
+            font-family: var(--display); font-size: 2.8rem;
+            text-transform: uppercase; line-height: 0.9;
+        }
+        .process-card-body p {
+            font-family: var(--mono); font-size: 0.7rem; color: var(--dim);
+            margin-top: 12px; line-height: 1.6;
+        }
+
+        /* ─── COLLECTION ─── */
+        .collection { padding: 120px 0 0; border-top: 1px solid var(--border); }
+        .collection-header { padding: 0 5% 70px; border-bottom: 1px solid var(--border); }
+        .collection-header h2 {
+            font-family: var(--display); font-size: clamp(3rem, 6vw, 6rem);
+            text-transform: uppercase; line-height: 0.9;
+        }
+        .collection-header p {
+            font-family: var(--mono); color: var(--dim); font-size: 0.72rem;
+            letter-spacing: 4px; text-transform: uppercase; margin-top: 15px;
+        }
+
+        .item-row {
+            display: grid; grid-template-columns: 1.3fr 1fr;
+            background: #000;
+            border-bottom: 1px solid var(--border);
+            opacity: 0; transform: translateY(50px);
+            transition: 1s cubic-bezier(0.16,1,0.3,1);
+        }
+        .item-row.visible { opacity: 1; transform: translateY(0); }
+        .item-row.reverse { grid-template-columns: 1fr 1.3fr; }
+        .item-row.reverse .item-img-container { order: 2; }
+        .item-row.reverse .item-content { order: 1; }
+
+        .item-img-container { overflow: hidden; height: 760px; position: relative; }
+        .item-badge {
+            position: absolute; top: 30px; left: 30px; z-index: 2;
+            font-family: var(--mono); font-size: 0.6rem; letter-spacing: 3px;
+            text-transform: uppercase; padding: 6px 12px;
+            background: var(--accent); color: #000; font-weight: 700;
+        }
+        .item-img {
+            width: 100%; height: 100%; object-fit: cover;
+            filter: grayscale(1) brightness(0.7);
+            transition: 1.2s cubic-bezier(0.16,1,0.3,1);
+        }
+        .item-row:hover .item-img { filter: grayscale(0) brightness(0.9); transform: scale(1.04); }
+        .item-img-secondary {
+            position: absolute; top: 0; left: 0;
+            opacity: 0; transition: opacity 0.8s ease, filter 1.2s cubic-bezier(0.16,1,0.3,1), transform 1.2s cubic-bezier(0.16,1,0.3,1);
+        }
+        .item-row:hover .item-img-secondary { opacity: 1; }
+
+        .item-content {
+            padding: 80px 60px;
+            display: flex; flex-direction: column; justify-content: center;
+            border-left: 1px solid var(--border);
+        }
+        .item-row.reverse .item-content { border-left: none; border-right: 1px solid var(--border); }
+        .item-tag {
+            font-family: var(--mono); color: var(--accent); font-size: 0.65rem;
+            margin-bottom: 20px; text-transform: uppercase; letter-spacing: 3px;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .item-tag::before { content: ''; display: block; width: 20px; height: 1px; background: var(--accent); }
+        .item-title {
+            font-family: var(--display);
+            font-size: clamp(3rem, 4.5vw, 5.5rem);
+            text-transform: uppercase; margin-bottom: 30px;
+            line-height: 0.88; color: var(--bone);
+        }
+        .item-story {
+            color: var(--dim); margin-bottom: 40px; font-size: 1rem;
+            line-height: 1.7; border-left: 2px solid #1a1a1a; padding-left: 25px;
+        }
+        .item-specs {
+            background: #060606; border: 1px solid #111; padding: 25px;
+            font-family: var(--mono); font-size: 0.68rem; color: #444;
+            display: grid; grid-template-columns: 1fr 1fr; gap: 18px;
+        }
+        .item-specs b { color: var(--bone); }
+        .item-footer {
+            margin-top: 40px; display: flex;
+            justify-content: space-between; align-items: center;
+        }
+        .claim-btn {
+            padding: 16px 36px; border: 1px solid var(--accent);
+            color: var(--accent); font-family: var(--mono); text-decoration: none;
+            text-transform: uppercase; transition: 0.3s; letter-spacing: 3px;
+            font-size: 0.72rem; font-weight: 700;
+            display: inline-flex; align-items: center; gap: 10px;
+        }
+        .claim-btn::after { content: '→'; transition: 0.3s; }
+        .claim-btn:hover { background: var(--accent); color: #000; }
+        .claim-btn:hover::after { transform: translateX(5px); }
+        .item-nfc {
+            font-family: var(--mono); font-size: 0.6rem;
+            color: var(--dim); letter-spacing: 2px; text-transform: uppercase;
+        }
+        .item-nfc span { color: var(--accent); }
+
+        /* ─── MATERIALS ─── */
+        .materials { border-top: 1px solid var(--border); }
+        .materials-header {
+            padding: 100px 5% 70px;
+            display: flex; justify-content: space-between; align-items: flex-end;
+            border-bottom: 1px solid var(--border);
+        }
+        .materials-header h2 {
+            font-family: var(--display); font-size: clamp(3rem, 5vw, 5rem);
+            text-transform: uppercase;
+        }
+        .materials-grid { display: grid; grid-template-columns: repeat(4, 1fr); }
+        .mat-card {
+            aspect-ratio: 3/4; position: relative; overflow: hidden;
+            border-right: 1px solid var(--border);
+        }
+        .mat-card:last-child { border-right: none; }
+        .mat-card img {
+            width: 100%; height: 100%; object-fit: cover;
+            filter: grayscale(1) brightness(0.4);
+            transition: 1s cubic-bezier(0.16,1,0.3,1);
+        }
+        .mat-card:hover img { filter: grayscale(0.4) brightness(0.6); transform: scale(1.08); }
+        .mat-card-label {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            padding: 50px 25px 30px;
+            background: linear-gradient(to top, rgba(0,0,0,1) 30%, transparent);
+        }
+        .mat-name {
+            font-family: var(--display); font-size: 2.5rem;
+            text-transform: uppercase; color: var(--bone);
+        }
+        .mat-desc {
+            font-family: var(--mono); font-size: 0.62rem;
+            color: var(--dim); margin-top: 8px; line-height: 1.5; letter-spacing: 1px;
+        }
+        .mat-origin {
+            font-family: var(--mono); font-size: 0.58rem;
+            color: var(--accent); margin-top: 10px; letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        /* ─── FOOTER ─── */
+        footer {
+            background: #020202; border-top: 1px solid var(--border);
+            padding: 80px 5%; padding-bottom: 40px;
+        }
+        .footer-grid {
+            display: grid; grid-template-columns: 2fr 1fr 1fr;
+            gap: 80px; margin-bottom: 80px;
+        }
+        .footer-brand-name {
+            font-family: var(--display); font-size: 3.5rem;
+            text-transform: uppercase; line-height: 0.9;
+            color: var(--bone); margin-bottom: 20px;
+        }
+        .footer-brand-desc {
+            font-family: var(--mono); font-size: 0.68rem;
+            color: var(--dim); line-height: 1.7; max-width: 320px;
+        }
+        .footer-col-title {
+            font-family: var(--mono); font-size: 0.6rem;
+            color: var(--accent); letter-spacing: 4px;
+            text-transform: uppercase; margin-bottom: 25px;
+        }
+        .footer-col ul { list-style: none; }
+        .footer-col ul li {
+            font-family: var(--mono); font-size: 0.72rem;
+            color: var(--dim); padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+            letter-spacing: 1px;
+        }
+        .footer-bottom {
+            display: flex; justify-content: space-between; align-items: center;
+            padding-top: 40px; border-top: 1px solid var(--border);
+            font-family: var(--mono); font-size: 0.6rem;
+            color: var(--dim); letter-spacing: 2px; text-transform: uppercase;
+        }
+        .footer-status { display: flex; align-items: center; gap: 8px; }
+        .status-dot { width: 5px; height: 5px; background: #22c55e; border-radius: 50%; animation: pulse 1.5s ease-in-out infinite; }
+
+        /* ─── REVEAL ANIMATION ─── */
+        .reveal {
+            opacity: 0; transform: translateY(40px);
+            transition: 0.8s cubic-bezier(0.16,1,0.3,1);
+        }
+        .reveal.visible { opacity: 1; transform: translateY(0); }
+
+        /* ─── RESPONSIVE ─── */
+        @media (max-width: 1100px) {
+            .item-row, .item-row.reverse { grid-template-columns: 1fr; }
+            .item-row.reverse .item-img-container { order: 1; }
+            .item-row.reverse .item-content { order: 2; }
+            .item-img-container { height: 500px; }
+            .item-content { padding: 60px 40px; }
+            .item-row.reverse .item-content { border-right: none; }
+            .manifesto { grid-template-columns: 1fr; }
+            .manifesto-header { position: static; }
+            .process-grid { grid-template-columns: 1fr; }
+            .process-card { aspect-ratio: 4/3; }
+            .stats { grid-template-columns: repeat(2, 1fr); }
+            .materials-grid { grid-template-columns: repeat(2, 1fr); }
+            .footer-grid { grid-template-columns: 1fr; gap: 40px; }
+        }
+        @media (max-width: 768px) {
+            .stats { grid-template-columns: 1fr 1fr; }
+            .materials-grid { grid-template-columns: 1fr 1fr; }
+            nav { padding: 18px 5vw; font-size: 0.62rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- LOADING SCREEN -->
+    <div id="loader">
+        <div class="loader-line" id="l0">HEAVY MARINE UTILITIES // INTAKE TERMINAL v2.4</div>
+        <div class="loader-line" id="l1">INITIALIZING DIGITAL PRODUCT PASSPORT SYSTEM...</div>
+        <div class="loader-line" id="l2">NTAG213 NFC AUTHENTICATION: OK</div>
+        <div class="loader-line" id="l3">SCANNING CARGO MANIFEST: GOA // LIV // AMS</div>
+        <div class="loader-line" id="l4">LOADING UNIT DATABASE...</div>
+        <div class="loader-progress"><div class="loader-bar" id="loader-bar"></div></div>
+    </div>
+
+    <!-- NOISE + SCANLINES -->
+    <div class="scanlines"></div>
+
+    <!-- CROSSHAIR -->
+    <div class="crosshair">
+        <div class="ch-h" id="ch-h"></div>
+        <div class="ch-v" id="ch-v"></div>
+    </div>
+
+    <!-- HUD CURSOR -->
+    <div id="hud-cursor">
+        <div class="coordinate-data" id="coord-lat">LAT: --.----</div>
+        <div class="coordinate-data" id="coord-lng">LNG: --.----</div>
+    </div>
+
+    <!-- NAV -->
+    <nav>
+        <div class="nav-brand">
+            <div class="nav-dot"></div>
+            HEAVY MARINE UTILITIES
+        </div>
+        <div class="nav-right">GOA // LIV // AMS &nbsp;|&nbsp; <span>03 UNITS ONLINE</span></div>
+    </nav>
+
+    <!-- HERO -->
+    <header class="hero">
+        <div class="hero-bg" id="hero-bg"></div>
+        <div class="hero-content">
+            <div class="hero-eyebrow">INDUSTRIAL UPCYCLE // SINCE 2024</div>
+            <h1 data-text="HEAVY MARINE UTILITY.">HEAVY MARINE<br>UTILITY.</h1>
+            <div class="hero-sub">&gt; CARGO REPURPOSED. HISTORY INTACT.</div>
+        </div>
+        <div class="hero-scroll">SCROLL</div>
+    </header>
+
+    <!-- MARQUEE -->
+    <div class="marquee-strip">
+        <div class="marquee-track">
+            <span>DACRON</span><span class="sep">//</span>
+            <span>RETIRED RACING SAILS</span><span class="sep">//</span>
+            <span>KEVLAR CONSTRUCTION</span><span class="sep">//</span>
+            <span>FORGED STEEL HARDWARE</span><span class="sep">//</span>
+            <span>ZERO STITCH</span><span class="sep">//</span>
+            <span>NFC CERTIFIED</span><span class="sep">//</span>
+            <span>GENOVA · LIVERPOOL · AMSTERDAM</span><span class="sep">//</span>
+            <span>CLOSED LOOP LOGISTICS</span><span class="sep">//</span>
+            <span>DIGITAL PRODUCT PASSPORT</span><span class="sep">//</span>
+            <span>INDUSTRIAL ORIGAMI</span><span class="sep">//</span>
+            <span>DACRON</span><span class="sep">//</span>
+            <span>RETIRED RACING SAILS</span><span class="sep">//</span>
+            <span>KEVLAR CONSTRUCTION</span><span class="sep">//</span>
+            <span>FORGED STEEL HARDWARE</span><span class="sep">//</span>
+            <span>ZERO STITCH</span><span class="sep">//</span>
+            <span>NFC CERTIFIED</span><span class="sep">//</span>
+            <span>GENOVA · LIVERPOOL · AMSTERDAM</span><span class="sep">//</span>
+            <span>CLOSED LOOP LOGISTICS</span><span class="sep">//</span>
+            <span>DIGITAL PRODUCT PASSPORT</span><span class="sep">//</span>
+            <span>INDUSTRIAL ORIGAMI</span><span class="sep">//</span>
+        </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats">
+        <div class="stat-block">
+            <div class="stat-num">03</div>
+            <div class="stat-label">Active Pieces</div>
+        </div>
+        <div class="stat-block">
+            <div class="stat-num">100%</div>
+            <div class="stat-label">Upcycled Material</div>
+        </div>
+        <div class="stat-block">
+            <div class="stat-num">0</div>
+            <div class="stat-label">Stitches Used</div>
+        </div>
+        <div class="stat-block">
+            <div class="stat-num">∞</div>
+            <div class="stat-label">Provenance Chain</div>
+        </div>
+    </div>
+
+    <!-- MANIFESTO -->
+    <section class="manifesto">
+        <div class="manifesto-header">
+            <div class="section-tag">// THE MANIFESTO</div>
+            <h2 id="manifesto-h2">The Structural<br>Witness.</h2>
+            <div class="big-number">01</div>
+        </div>
+        <div class="m-content">
+            <p>Before it was your gear, it was a witness to the gale. These hulls of <b>Dacron and Kevlar</b> have spent decades under crushing tension, absorbing the salt of the Mediterranean and the bite of the North Sea. They are retired veterans of the racing circuit, carrying the scars of every tack and jibe. We don't discard this history; <b>we harvest it</b>.</p>
+            <p>We honor the legacy of the silent laborers — the <b>Camalli</b> of Genova, the <b>Mersey Stevedores</b>, the <b>Havenarbeiders</b>. No thread. Just industrial origami and steel rivets. We fused that raw necessity with clinical industrial engineering. This is upcycling as a form of resistance. A commitment to an indestructible future rooted in a rugged past.</p>
+            <p>Every piece is a unique node in a closed logistics chain. Integrated <b>NTAG213 NFC Chips</b> embedded in heat-sealed rubber manifests provide a <b>Digital Product Passport</b>. Scan to verify the unit's origin. <b>Claim your cargo.</b></p>
+        </div>
+    </section>
+
+    <!-- PROCESS -->
+    <section class="process">
+        <div class="section-header reveal">
+            <h2>Chain of<br>Custody.</h2>
+            <div class="s-tag">// THE PROCESS</div>
+        </div>
+        <div class="process-grid">
+            <div class="process-card">
+                <img src="https://images.unsplash.com/photo-1518467166778-b88f373ffec7?q=80&w=900&auto=format&fit=crop" alt="Harvest — Retired Sails">
+                <div class="process-card-body">
+                    <div class="process-step">01 // HARVEST</div>
+                    <h3>Source the<br>Wreckage.</h3>
+                    <p>Decommissioned racing sails collected directly from marinas in the Mediterranean and North Sea. Every hull tells a story.</p>
+                </div>
+            </div>
+            <div class="process-card">
+                <img src="assets/images/products/units_field_portrait.png" alt="Units in the field — GENOVA & LIVERPOOL">
+                <div class="process-card-body">
+                    <div class="process-step">02 // FABRICATE</div>
+                    <h3>Fold.<br>Rivet. Done.</h3>
+                    <p>Industrial origami. Forged steel hardware. Heat-sealed seams. Zero thread. Each unit is assembled by hand in one session.</p>
+                </div>
+            </div>
+            <div class="process-card">
+                <img src="https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=900&auto=format&fit=crop" alt="Certify — NFC">
+                <div class="process-card-body">
+                    <div class="process-step">03 // CERTIFY</div>
+                    <h3>Stamp the<br>Manifest.</h3>
+                    <p>NTAG213 NFC chip embedded in a heat-sealed rubber panel. Immutable on-chain record of origin, sail history, and unit number.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- COLLECTION -->
+    <section class="collection">
+        <div class="collection-header reveal">
+            <h2>The Cargo<br>Manifest.</h2>
+            <p>// THREE UNITS // LIMITED RUN // NFC TRACEABLE</p>
+        </div>
+
+        <div class="item-row">
+            <div class="item-img-container">
+                <div class="item-badge">LIMITED RUN</div>
+                <img src="assets/images/products/unit_01_camallo_sling.png" class="item-img" alt="The Camallo Sash-Sling">
+            </div>
+            <div class="item-content">
+                <div class="item-tag">UNIT_1301 // GENOVA</div>
+                <h3 class="item-title">THE CAMALLO<br>SASH-SLING</h3>
+                <p class="item-story">"Inspired by the 14th-century Genova dockers. A wide support-sash chassis designed for weight distribution. Features an internal forged steel hook — the tactile anchor of the worker."</p>
+                <div class="item-specs">
+                    <div>MATERIAL: <b>WEATHERED BONE DACRON</b></div>
+                    <div>HARDWARE: <b>FORGED CAMALLO HOOK</b></div>
+                    <div>BUILD: <b>ORIGAMI FOLD // 7 RIVETS</b></div>
+                    <div>STATUS: <b>LIMITED // TRACEABLE</b></div>
+                </div>
+                <div class="item-footer">
+                    <a href="#" class="claim-btn">CLAIM CARGO</a>
+                    <div class="item-nfc">NFC: <span>NTAG213 ✓</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="item-row reverse">
+            <div class="item-img-container">
+                <div class="item-badge">LIMITED RUN</div>
+                <img src="assets/images/products/unit_02_mersey_mantle_docks.png" class="item-img" alt="The Mersey Mantle — Liverpool Docks">
+                <img src="assets/images/products/unit_02_mersey_mantle_studio.png" class="item-img item-img-secondary" alt="The Mersey Mantle — Studio">
+            </div>
+            <div class="item-content">
+                <div class="item-tag">UNIT_1402 // LIVERPOOL</div>
+                <h3 class="item-title">THE MERSEY<br>MANTLE</h3>
+                <p class="item-story">"A technical shoulder-shield engineered for the horizontal rain of the Mersey. Rigid Mylar construction for friction and rain protection. Armor for the urban worker."</p>
+                <div class="item-specs">
+                    <div>MATERIAL: <b>RIGID KEVLAR / MYLAR</b></div>
+                    <div>HARDWARE: <b>GUNMETAL BUCKLES</b></div>
+                    <div>BUILD: <b>SHIELD GEOMETRY // NO-SEW</b></div>
+                    <div>STATUS: <b>LIMITED // TRACEABLE</b></div>
+                </div>
+                <div class="item-footer">
+                    <a href="#" class="claim-btn">CLAIM CARGO</a>
+                    <div class="item-nfc">NFC: <span>NTAG213 ✓</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="item-row">
+            <div class="item-img-container">
+                <div class="item-badge">LIMITED RUN</div>
+                <img src="assets/images/products/unit_03_amsterdam_slides.png" class="item-img" alt="Amsterdam Shipyard Slides">
+            </div>
+            <div class="item-content">
+                <div class="item-tag">UNIT_1503 // AMSTERDAM</div>
+                <h3 class="item-title">AMSTERDAM<br>SHIPYARD SLIDES</h3>
+                <p class="item-story">"Indestructible shipyard footwear. Built on an industrial 1-inch block of black EVA foam. Straps are upcycled sailcloth, riveted directly into the chassis. Built for slick harbor decks."</p>
+                <div class="item-specs">
+                    <div>BASE: <b>1-INCH INDUSTRIAL EVA</b></div>
+                    <div>STRAP: <b>RECLAIMED SAILCLOTH</b></div>
+                    <div>BUILD: <b>RIVET-MOUNTED // NO STITCH</b></div>
+                    <div>STATUS: <b>LIMITED // TRACEABLE</b></div>
+                </div>
+                <div class="item-footer">
+                    <a href="#" class="claim-btn">CLAIM CARGO</a>
+                    <div class="item-nfc">NFC: <span>NTAG213 ✓</span></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- MATERIALS -->
+    <section class="materials">
+        <div class="materials-header reveal">
+            <h2>The Raw<br>Inventory.</h2>
+            <div class="s-tag">// MATERIALS</div>
+        </div>
+        <div class="materials-grid">
+            <div class="mat-card">
+                <img src="https://images.unsplash.com/photo-1558769132-cb1aea458c5e?q=80&w=600&auto=format&fit=crop" alt="Dacron Sailcloth">
+                <div class="mat-card-label">
+                    <div class="mat-name">Dacron</div>
+                    <div class="mat-desc">Woven polyester sailcloth. High tensile, UV-hardened, salt-seasoned from years at sea.</div>
+                    <div class="mat-origin">↗ Mediterranean Racing Circuit</div>
+                </div>
+            </div>
+            <div class="mat-card">
+                <img src="https://images.unsplash.com/photo-1581092160562-40aa08e78837?q=80&w=600&auto=format&fit=crop" alt="Kevlar Fiber">
+                <div class="mat-card-label">
+                    <div class="mat-name">Kevlar</div>
+                    <div class="mat-desc">Para-aramid synthetic fiber. 5× stronger than steel by weight. Retired from offshore racing hulls.</div>
+                    <div class="mat-origin">↗ North Sea Offshore Fleet</div>
+                </div>
+            </div>
+            <div class="mat-card">
+                <img src="https://images.unsplash.com/photo-1616486029423-aaa4789e8c9a?q=80&w=600&auto=format&fit=crop" alt="Mylar Film">
+                <div class="mat-card-label">
+                    <div class="mat-name">Mylar</div>
+                    <div class="mat-desc">Biaxially-oriented polyester film. Rigid, waterproof, reflective. Structural laminate from decommissioned racing sails.</div>
+                    <div class="mat-origin">↗ IRC Racing Fleet, Liverpool</div>
+                </div>
+            </div>
+            <div class="mat-card">
+                <img src="https://images.unsplash.com/photo-1504307651254-35680f356dfd?q=80&w=600&auto=format&fit=crop" alt="Forged Steel">
+                <div class="mat-card-label">
+                    <div class="mat-name">Steel</div>
+                    <div class="mat-desc">Hot-forged marine-grade hardware. Stainless rivets, camallo hooks, gunmetal buckles. No glue. No thread.</div>
+                    <div class="mat-origin">↗ Genova Dockyard Supply</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="footer-grid">
+            <div>
+                <div class="footer-brand-name">Heavy<br>Marine<br>Utilities</div>
+                <p class="footer-brand-desc">A closed-loop upcycling operation. We source decommissioned marine hardware from the racing circuit and transform it into utility goods for the urban worker. Every unit is unique, limited, and NFC-traceable.</p>
+            </div>
+            <div class="footer-col">
+                <div class="footer-col-title">// Ports of Origin</div>
+                <ul>
+                    <li>GENOVA, IT</li>
+                    <li>LIVERPOOL, UK</li>
+                    <li>AMSTERDAM, NL</li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <div class="footer-col-title">// Manifesto</div>
+                <ul>
+                    <li>Zero Waste Policy</li>
+                    <li>NFC Provenance</li>
+                    <li>No Stitch Methodology</li>
+                    <li>Industrial Origami</li>
+                    <li>Closed Loop Logistics</li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div>© 2024 HEAVY MARINE UTILITIES. ALL CARGO RESERVED.</div>
+            <div class="footer-status">
+                <div class="status-dot"></div>
+                INTAKE TERMINAL: ONLINE
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // ─── LOADER ───
+        const loaderLines = [
+            document.getElementById('l0'),
+            document.getElementById('l1'),
+            document.getElementById('l2'),
+            document.getElementById('l3'),
+            document.getElementById('l4'),
+        ];
+        const loaderBar = document.getElementById('loader-bar');
+        const loader = document.getElementById('loader');
+
+        let delay = 0;
+        loaderLines.forEach((line, i) => {
+            setTimeout(() => {
+                line.classList.add('typed');
+                loaderBar.style.width = ((i + 1) / loaderLines.length * 100) + '%';
+            }, delay);
+            delay += 380;
+        });
+
+        setTimeout(() => { loader.classList.add('hidden'); }, delay + 600);
+
+        // ─── HUD CURSOR ───
+        const hud = document.getElementById('hud-cursor');
+        const latDisplay = document.getElementById('coord-lat');
+        const lngDisplay = document.getElementById('coord-lng');
+        const chH = document.getElementById('ch-h');
+        const chV = document.getElementById('ch-v');
+
+        document.addEventListener('mousemove', (e) => {
+            hud.style.left = e.clientX + 'px';
+            hud.style.top = e.clientY + 'px';
+            chH.style.top = e.clientY + 'px';
+            chV.style.left = e.clientX + 'px';
+            const lat = (44 + e.clientY / window.innerHeight * 10).toFixed(4);
+            const lng = (4 + e.clientX / window.innerWidth * 10).toFixed(4);
+            latDisplay.innerText = 'LAT: ' + lat + '°N';
+            lngDisplay.innerText = 'LNG: ' + lng + '°E';
+        });
+
+        // ─── PARALLAX HERO ───
+        const heroBg = document.getElementById('hero-bg');
+        window.addEventListener('scroll', () => {
+            const y = window.scrollY;
+            heroBg.style.transform = `translateY(${y * 0.4}px)`;
+        }, { passive: true });
+
+        // ─── SCROLL REVEAL ───
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.1, rootMargin: '0px 0px -60px 0px' });
+
+        document.querySelectorAll(
+            '.reveal, .stat-block, .manifesto-header h2, .m-content p, .process-card, .item-row'
+        ).forEach(el => revealObserver.observe(el));
+    </script>
+</body>
+</html>
