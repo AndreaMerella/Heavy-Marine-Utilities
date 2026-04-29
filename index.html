@@ -699,6 +699,103 @@
             color: var(--dim); letter-spacing: 2px; text-transform: uppercase;
         }
 
+        /* ─── PROCESS CARD EXTRAS ─── */
+
+        /* Card 02 — Genova crop (left half of side-by-side Gemini image) */
+        .process-card img.genova-only {
+            object-position: 8% center;
+        }
+
+        /* Card 01 — Sail material inset swatch (top-right corner) */
+        .sail-inset {
+            position: absolute;
+            top: 22px; right: 22px;
+            width: 88px; height: 72px;
+            border: 1px solid rgba(210,205,190,0.3);
+            overflow: hidden; z-index: 3;
+        }
+        .sail-inset-texture {
+            width: 100%; height: 100%;
+            background:
+                repeating-linear-gradient(0deg,  rgba(215,208,193,0.28) 0, rgba(215,208,193,0.28) 1px, transparent 1px, transparent 8px),
+                repeating-linear-gradient(90deg, rgba(215,208,193,0.28) 0, rgba(215,208,193,0.28) 1px, transparent 1px, transparent 8px),
+                repeating-linear-gradient(0deg,  rgba(215,208,193,0.1)  0, rgba(215,208,193,0.1)  4px, transparent 4px, transparent 8px),
+                #0f0e0c;
+        }
+        .sail-inset-label {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            font-family: var(--mono); font-size: 0.36rem;
+            color: rgba(210,205,190,0.6); letter-spacing: 1.5px;
+            text-transform: uppercase; text-align: center;
+            padding: 3px 4px; background: rgba(0,0,0,0.75);
+        }
+
+        /* Card 03 — NFC / Digital Passport */
+        .nfc-card { background: #030908; }
+        .nfc-bg {
+            position: absolute; inset: 0;
+            background: radial-gradient(ellipse at 50% 38%, rgba(0,48,24,0.55) 0%, #030908 68%);
+        }
+        .nfc-display {
+            position: absolute; inset: 0; z-index: 2;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            padding: 32px 26px; gap: 18px;
+        }
+        .nfc-header-row {
+            width: 100%; display: flex; justify-content: space-between; align-items: center;
+            font-family: var(--mono); font-size: 0.52rem; letter-spacing: 3px;
+            color: rgba(0,210,100,0.45); text-transform: uppercase;
+            border-bottom: 1px solid rgba(0,210,100,0.12); padding-bottom: 10px;
+        }
+        .nfc-antenna-wrap {
+            position: relative; width: 148px; height: 148px; flex-shrink: 0;
+        }
+        .nfc-ring {
+            position: absolute; border-radius: 10px;
+            border: 1px solid rgba(0,210,100,0.18);
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            animation: nfc-pulse 3s ease-in-out infinite;
+        }
+        .nfc-ring.r1 { width: 148px; height: 148px; animation-delay: 0s; }
+        .nfc-ring.r2 { width: 110px; height: 110px; border-color: rgba(0,210,100,0.28); animation-delay: 0.4s; }
+        .nfc-ring.r3 { width: 74px;  height: 74px;  border-color: rgba(0,210,100,0.42); animation-delay: 0.8s; }
+        @keyframes nfc-pulse {
+            0%,100% { opacity: 0.6; }
+            50%      { opacity: 1.0; }
+        }
+        .nfc-chip {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 46px; height: 38px;
+            background: rgba(0,210,100,0.07);
+            border: 1px solid rgba(0,210,100,0.55);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .nfc-chip-label {
+            font-family: var(--mono); font-size: 0.42rem;
+            color: rgba(0,210,100,0.9); letter-spacing: 1.5px;
+            text-align: center; text-transform: uppercase; line-height: 1.5;
+        }
+        .nfc-data-rows {
+            width: 100%; display: flex; flex-direction: column; gap: 6px;
+        }
+        .nfc-row {
+            display: flex; justify-content: space-between; align-items: center;
+            font-family: var(--mono); font-size: 0.55rem; letter-spacing: 1px;
+            border-bottom: 1px solid rgba(0,210,100,0.07); padding-bottom: 5px;
+        }
+        .nfc-k { color: rgba(0,210,100,0.38); text-transform: uppercase; }
+        .nfc-v { color: rgba(0,210,100,0.72); text-transform: uppercase; }
+        .nfc-verified { color: rgba(0,240,110,0.95); font-weight: 700; }
+        .nfc-uid {
+            font-family: var(--mono); font-size: 0.48rem;
+            color: rgba(0,210,100,0.28); letter-spacing: 2px; text-align: center;
+            text-transform: uppercase; border-top: 1px solid rgba(0,210,100,0.08);
+            padding-top: 8px; width: 100%;
+        }
+
         /* ─── RESPONSIVE ─── */
         @media (max-width: 1100px) {
             .item-row, .item-row.reverse { grid-template-columns: 1fr; }
@@ -842,32 +939,78 @@
             <div class="s-tag">// THE PROCESS</div>
         </div>
         <div class="process-grid">
-            <!-- Sail collection from marinas, retired racing boats at dock -->
+
+            <!-- 01 HARVEST — harbour sea + sail material inset swatch -->
             <div class="process-card">
-                <img src="https://images.unsplash.com/photo-1468581264429-2548ef9eb732?q=80&w=900&auto=format&fit=crop" alt="Marina — Decommissioned Racing Sails at Dock">
+                <img src="assets/images/archive/Gemini_Generated_Image_na374kna374kna37.png"
+                     alt="Harbour dock — sea, cranes, moored vessels, Amsterdam port">
+                <!-- Sail material inset: weathered Dacron texture swatch -->
+                <div class="sail-inset">
+                    <div class="sail-inset-texture"></div>
+                    <div class="sail-inset-label">WEATHERED DACRON</div>
+                </div>
                 <div class="process-card-body">
                     <div class="process-step">01 // HARVEST</div>
                     <h3>Source the<br>Wreckage.</h3>
                     <p>Decommissioned racing sails collected directly from marinas in the Mediterranean and North Sea. Every hull tells a story.</p>
                 </div>
             </div>
+
+            <!-- 02 FABRICATE — Genova version only (left crop) -->
             <div class="process-card">
-                <img src="assets/images/products/units_field_portrait.png" alt="Units in the Field — GENOVA &amp; LIVERPOOL">
+                <img src="assets/images/archive/Gemini_Generated_Image_%20(3).png"
+                     class="genova-only"
+                     alt="UNIT_01 // GENOVA — Camallo Sash-Sling, dock worker">
                 <div class="process-card-body">
                     <div class="process-step">02 // FABRICATE</div>
                     <h3>Fold.<br>Rivet. Done.</h3>
                     <p>Industrial origami. Forged steel hardware. Heat-sealed seams. Zero thread. Each unit is assembled by hand in one session.</p>
                 </div>
             </div>
-            <!-- Cargo manifest stamping, port certification, dock documentation -->
-            <div class="process-card">
-                <img src="https://images.unsplash.com/photo-1589395937658-0557e7d89fad?q=80&w=900&auto=format&fit=crop" alt="Cargo Manifest — NFC Certification and Stamp">
+
+            <!-- 03 CERTIFY — CSS NTAG213 NFC chip / Digital Product Passport -->
+            <div class="process-card nfc-card">
+                <div class="nfc-bg"></div>
+                <div class="nfc-display">
+                    <div class="nfc-header-row">
+                        <span>HMU // DPP</span>
+                        <span>ISO 14443-A</span>
+                    </div>
+                    <div class="nfc-antenna-wrap">
+                        <div class="nfc-ring r1"></div>
+                        <div class="nfc-ring r2"></div>
+                        <div class="nfc-ring r3"></div>
+                        <div class="nfc-chip">
+                            <div class="nfc-chip-label">NTAG213<br>NXP</div>
+                        </div>
+                    </div>
+                    <div class="nfc-data-rows">
+                        <div class="nfc-row">
+                            <span class="nfc-k">CHIP</span>
+                            <span class="nfc-v">NTAG213 // NXP</span>
+                        </div>
+                        <div class="nfc-row">
+                            <span class="nfc-k">MEMORY</span>
+                            <span class="nfc-v">144 BYTES</span>
+                        </div>
+                        <div class="nfc-row">
+                            <span class="nfc-k">SEAL</span>
+                            <span class="nfc-v">HEAT-BONDED RUBBER</span>
+                        </div>
+                        <div class="nfc-row">
+                            <span class="nfc-k">STATUS</span>
+                            <span class="nfc-v nfc-verified">● AUTHENTICATED</span>
+                        </div>
+                    </div>
+                    <div class="nfc-uid">UID: 04:A3:7F:2C:B1:09:80</div>
+                </div>
                 <div class="process-card-body">
                     <div class="process-step">03 // CERTIFY</div>
                     <h3>Stamp the<br>Manifest.</h3>
                     <p>NTAG213 NFC chip embedded in a heat-sealed rubber panel. Immutable on-chain record of origin, sail history, and unit number.</p>
                 </div>
             </div>
+
         </div>
     </section>
 
