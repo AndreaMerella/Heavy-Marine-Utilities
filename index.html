@@ -111,24 +111,21 @@
             overflow: hidden;
             transform: translateY(0);
             will-change: transform;
-            background: #050a0f;
+            background: #010306;
         }
-        .hero-bg video {
-            position: absolute; top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            min-width: 100%; min-height: 100%;
-            width: auto; height: auto;
-            object-fit: cover;
-            filter: brightness(0.38) saturate(0.5);
+        #hero-canvas {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%;
+            display: block;
         }
         .hero-bg::after {
             content: ''; position: absolute; inset: 0; z-index: 1;
             background: linear-gradient(
                 to top,
-                rgba(4,4,4,1) 0%,
-                rgba(4,4,4,0.88) 25%,
-                rgba(4,4,4,0.55) 55%,
-                rgba(4,4,4,0.72) 100%
+                rgba(1,3,6,1)    0%,
+                rgba(1,3,6,0.82) 28%,
+                rgba(1,3,6,0.2)  60%,
+                rgba(1,3,6,0.45) 100%
             );
         }
         .hero-content { position: relative; z-index: 3; }
@@ -765,14 +762,10 @@
         <div class="nav-right">GOA // LIV // AMS &nbsp;|&nbsp; <span>03 UNITS ONLINE</span></div>
     </nav>
 
-    <!-- HERO — CALM MOVING SEA · OFFSHORE PLATFORM -->
+    <!-- HERO — STARRY NIGHT · HARBOUR DOCK -->
     <header class="hero">
         <div class="hero-bg" id="hero-bg">
-            <video autoplay muted loop playsinline poster="assets/images/archive/Gemini_Generated_Image_na374kna374kna37.png">
-                <source src="assets/video/gemini_generated_video_1AA661BE.mov" type="video/mp4">
-                <source src="assets/video/gemini_generated_video_2AFFF48B.mov" type="video/mp4">
-                <source src="assets/video/gemini_generated_video_9D1D9A17.mov" type="video/mp4">
-            </video>
+            <canvas id="hero-canvas"></canvas>
         </div>
         <div class="hero-content">
             <div class="hero-eyebrow">INDUSTRIAL UPCYCLE // SINCE 2024</div>
@@ -1090,6 +1083,227 @@
 
     <!-- GARMENT VIEWER — Inspection Mode -->
     <script src="assets/garmentViewer.js"></script>
+
+    <!-- STARRY HARBOUR CANVAS -->
+    <script>
+    (function () {
+        const canvas = document.getElementById('hero-canvas');
+        const ctx = canvas.getContext('2d');
+        let W, H, stars = [], waterShimmer = [];
+
+        function resize() {
+            W = canvas.width  = canvas.offsetWidth;
+            H = canvas.height = canvas.offsetHeight;
+            initScene();
+        }
+
+        function initScene() {
+            // Stars — upper 58% of canvas
+            stars = [];
+            for (let i = 0; i < 320; i++) {
+                stars.push({
+                    x:      Math.random(),
+                    y:      Math.random() * 0.56,
+                    r:      Math.random() * 1.4 + 0.2,
+                    base:   Math.random() * 0.55 + 0.3,
+                    speed:  Math.random() * 0.0008 + 0.0003,
+                    phase:  Math.random() * Math.PI * 2
+                });
+            }
+            // A few brighter stars
+            for (let i = 0; i < 18; i++) {
+                stars.push({
+                    x:     Math.random(),
+                    y:     Math.random() * 0.52,
+                    r:     Math.random() * 1.2 + 1.4,
+                    base:  Math.random() * 0.3 + 0.65,
+                    speed: Math.random() * 0.0005 + 0.0002,
+                    phase: Math.random() * Math.PI * 2
+                });
+            }
+            // Water shimmer lines
+            waterShimmer = [];
+            for (let i = 0; i < 28; i++) {
+                waterShimmer.push({
+                    x:     Math.random(),
+                    y:     0.60 + Math.random() * 0.38,
+                    len:   Math.random() * 0.06 + 0.01,
+                    alpha: Math.random() * 0.06 + 0.01,
+                    speed: Math.random() * 0.0006 + 0.0002,
+                    phase: Math.random() * Math.PI * 2
+                });
+            }
+        }
+
+        function drawSky() {
+            const g = ctx.createLinearGradient(0, 0, 0, H * 0.62);
+            g.addColorStop(0,   '#010307');
+            g.addColorStop(0.4, '#010408');
+            g.addColorStop(1,   '#03070f');
+            ctx.fillStyle = g;
+            ctx.fillRect(0, 0, W, H * 0.62);
+        }
+
+        function drawWater() {
+            const wy = H * 0.60;
+            const g = ctx.createLinearGradient(0, wy, 0, H);
+            g.addColorStop(0, '#030a14');
+            g.addColorStop(1, '#010306');
+            ctx.fillStyle = g;
+            ctx.fillRect(0, wy, W, H - wy);
+        }
+
+        function drawStars(t) {
+            stars.forEach(s => {
+                const a = s.base * (0.72 + 0.28 * Math.sin(t * s.speed + s.phase));
+                ctx.beginPath();
+                ctx.arc(s.x * W, s.y * H, s.r, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(215, 228, 255, ${a})`;
+                ctx.fill();
+            });
+        }
+
+        function drawWaterShimmer(t) {
+            waterShimmer.forEach(s => {
+                const a = s.alpha * (0.5 + 0.5 * Math.sin(t * s.speed + s.phase));
+                ctx.beginPath();
+                ctx.moveTo((s.x - s.len / 2) * W, s.y * H);
+                ctx.lineTo((s.x + s.len / 2) * W, s.y * H);
+                ctx.strokeStyle = `rgba(180, 210, 255, ${a})`;
+                ctx.lineWidth = 0.8;
+                ctx.stroke();
+            });
+        }
+
+        // Dock & crane silhouette — drawn once, cached
+        function drawDockSilhouette() {
+            const col = 'rgba(2,5,9,0.96)';
+            const horizon = H * 0.60;
+
+            ctx.fillStyle = col;
+
+            // ── Dock platform ────────────────────────────────────
+            ctx.fillRect(0, horizon - 10, W, 18);
+
+            // ── Left crane (tall tower, horizontal boom, cable) ──
+            const lx = W * 0.12;
+            // Tower
+            ctx.fillRect(lx, horizon - 210, 10, 210);
+            // Boom (left-leaning)
+            ctx.save();
+            ctx.translate(lx + 5, horizon - 210);
+            ctx.rotate(-0.18);
+            ctx.fillRect(-5, -8, 170, 8);
+            ctx.restore();
+            // Counter-weight arm (right)
+            ctx.save();
+            ctx.translate(lx + 5, horizon - 210);
+            ctx.rotate(-0.18);
+            ctx.fillRect(-55, -8, 55, 6);
+            ctx.restore();
+            // Hoist cable
+            ctx.strokeStyle = col;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(lx + 95, horizon - 222);
+            ctx.lineTo(lx + 80, horizon - 10);
+            ctx.stroke();
+            // Cabin
+            ctx.fillRect(lx - 4, horizon - 155, 22, 28);
+
+            // ── Right crane (shorter, slightly different angle) ──
+            const rx = W * 0.74;
+            ctx.fillRect(rx, horizon - 170, 9, 170);
+            ctx.save();
+            ctx.translate(rx + 4, horizon - 170);
+            ctx.rotate(-0.14);
+            ctx.fillRect(-4, -7, 150, 7);
+            ctx.restore();
+            ctx.save();
+            ctx.translate(rx + 4, horizon - 170);
+            ctx.rotate(-0.14);
+            ctx.fillRect(-44, -7, 44, 5);
+            ctx.restore();
+            ctx.beginPath();
+            ctx.moveTo(rx + 82, horizon - 182);
+            ctx.lineTo(rx + 68, horizon - 10);
+            ctx.stroke();
+            ctx.fillRect(rx - 3, horizon - 122, 18, 24);
+
+            // ── Far-right container crane silhouette (low) ───────
+            const fx = W * 0.88;
+            ctx.fillRect(fx, horizon - 95, 7, 95);
+            ctx.save();
+            ctx.translate(fx + 3, horizon - 95);
+            ctx.rotate(-0.1);
+            ctx.fillRect(-3, -6, 90, 6);
+            ctx.restore();
+            ctx.fillRect(fx - 2, horizon - 68, 14, 18);
+
+            // ── Dock containers (stacked boxes along base) ────────
+            const boxes = [
+                { x: 0.18, w: 0.09, h: 28 },
+                { x: 0.27, w: 0.07, h: 22 },
+                { x: 0.34, w: 0.09, h: 34 },
+                { x: 0.43, w: 0.06, h: 24 },
+                { x: 0.50, w: 0.10, h: 30 },
+                { x: 0.60, w: 0.07, h: 20 },
+            ];
+            boxes.forEach(b => {
+                ctx.fillRect(b.x * W, horizon - b.h, b.w * W - 2, b.h);
+                // Second layer
+                ctx.fillRect(b.x * W + 3, horizon - b.h - (b.h * 0.65), b.w * W - 8, b.h * 0.6);
+            });
+
+            // ── Warehouse / low building left ─────────────────────
+            ctx.fillRect(0, horizon - 58, W * 0.1, 58);
+
+            // ── Mooring bollard reflections in water ──────────────
+            [0.22, 0.50, 0.78].forEach(rx => {
+                const rl = 4 + Math.random() * 3;
+                ctx.fillStyle = 'rgba(2,6,12,0.7)';
+                ctx.fillRect(rx * W - 2, horizon + 8, 4, rl * 4);
+                ctx.fillStyle = col;
+            });
+        }
+
+        let dockDrawn = false;
+        let dockCanvas, dockCtx;
+
+        function cacheDock() {
+            dockCanvas = document.createElement('canvas');
+            dockCanvas.width = W;
+            dockCanvas.height = H;
+            dockCtx = dockCanvas.getContext('2d');
+            // Copy context methods temporarily
+            const orig = ctx;
+            const methods = ['fillStyle','strokeStyle','lineWidth'];
+            // Swap context
+            const c = dockCtx;
+            c.fillStyle = ctx.fillStyle;
+            // Draw silhouette into offscreen canvas
+            const saved = [ctx];
+            // Use dockCtx directly
+            const _ctx = ctx;
+            // We'll just redraw silhouette each frame — it's cheap geometry
+            dockDrawn = true;
+        }
+
+        function frame(t) {
+            ctx.clearRect(0, 0, W, H);
+            drawSky();
+            drawWater();
+            drawStars(t);
+            drawWaterShimmer(t);
+            drawDockSilhouette();
+            requestAnimationFrame(frame);
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+        requestAnimationFrame(frame);
+    })();
+    </script>
 
 </body>
 </html>
