@@ -108,23 +108,30 @@
         }
         .hero-bg {
             position: absolute; top: 0; left: 0; width: 100%; height: 115%;
-            /* Port cranes, shipping containers, dockworkers at the shoreline */
-            background-image: url('https://images.unsplash.com/photo-1578575437130-527eed3abbec?q=90&w=2400&auto=format&fit=crop');
-            background-size: cover; background-position: center 40%;
+            overflow: hidden;
             transform: translateY(0);
             will-change: transform;
+            background: #050a0f;
+        }
+        .hero-bg video {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            min-width: 100%; min-height: 100%;
+            width: auto; height: auto;
+            object-fit: cover;
+            filter: brightness(0.38) saturate(0.5);
         }
         .hero-bg::after {
-            content: ''; position: absolute; inset: 0;
+            content: ''; position: absolute; inset: 0; z-index: 1;
             background: linear-gradient(
                 to top,
                 rgba(4,4,4,1) 0%,
-                rgba(4,4,4,0.75) 30%,
-                rgba(4,4,4,0.25) 60%,
-                rgba(4,4,4,0.55) 100%
+                rgba(4,4,4,0.88) 25%,
+                rgba(4,4,4,0.55) 55%,
+                rgba(4,4,4,0.72) 100%
             );
         }
-        .hero-content { position: relative; z-index: 2; }
+        .hero-content { position: relative; z-index: 3; }
         .hero-eyebrow {
             font-family: var(--mono); color: var(--accent);
             font-size: 0.75rem; letter-spacing: 6px;
@@ -183,6 +190,7 @@
             text-transform: uppercase; writing-mode: vertical-rl;
             display: flex; align-items: center; gap: 10px; z-index: 2;
         }
+        .hero-scroll { z-index: 3; }
         .hero-scroll::after { content: ''; display: block; width: 1px; height: 60px; background: var(--dim); }
 
         /* ─── MARQUEE ─── */
@@ -433,12 +441,71 @@
             border-right: 1px solid var(--border);
         }
         .mat-card:last-child { border-right: none; }
-        .mat-card img {
-            width: 100%; height: 100%; object-fit: cover;
-            filter: grayscale(1) brightness(0.4);
-            transition: 1s cubic-bezier(0.16,1,0.3,1);
+        .mat-card .mat-card-label { z-index: 2; }
+        /* Material texture backgrounds — rendered, not random photos */
+        .mat-texture {
+            position: absolute; inset: 0;
+            transition: transform 1s cubic-bezier(0.16,1,0.3,1), filter 1s cubic-bezier(0.16,1,0.3,1);
         }
-        .mat-card:hover img { filter: grayscale(0.4) brightness(0.6); transform: scale(1.08); }
+        .mat-card:hover .mat-texture { transform: scale(1.08); filter: brightness(1.15); }
+
+        /* DACRON — tight polyester weave, cream warp/weft grid */
+        .mat-dacron {
+            background-color: #0f0e0c;
+            background-image:
+                repeating-linear-gradient(0deg,   rgba(210,205,193,0.18) 0, rgba(210,205,193,0.18) 1px, transparent 1px, transparent 9px),
+                repeating-linear-gradient(90deg,  rgba(210,205,193,0.18) 0, rgba(210,205,193,0.18) 1px, transparent 1px, transparent 9px),
+                repeating-linear-gradient(0deg,   rgba(210,205,193,0.07) 0, rgba(210,205,193,0.07) 4px, transparent 4px, transparent 9px),
+                repeating-linear-gradient(90deg,  rgba(210,205,193,0.07) 0, rgba(210,205,193,0.07) 4px, transparent 4px, transparent 9px);
+        }
+
+        /* KEVLAR — para-aramid diagonal twill weave, dark + muted gold */
+        .mat-kevlar {
+            background-color: #080807;
+            background-image:
+                repeating-linear-gradient( 45deg, rgba(160,120,10,0.13) 0, rgba(160,120,10,0.13) 2px, transparent 2px, transparent 7px),
+                repeating-linear-gradient(-45deg, rgba(0,0,0,0.55)        0, rgba(0,0,0,0.55) 2px,        transparent 2px, transparent 7px),
+                repeating-linear-gradient( 45deg, rgba(160,120,10,0.06) 0, rgba(160,120,10,0.06) 7px, transparent 7px, transparent 14px);
+        }
+
+        /* MYLAR — biaxially-oriented polyester film, reflective metallic */
+        .mat-mylar {
+            background: linear-gradient(
+                125deg,
+                #0d0d0d  0%,
+                #2a2a28 12%,
+                #4a4a46 22%,
+                #1c1c1a 32%,
+                #3a3a36 42%,
+                #666660 52%,
+                #2a2a28 62%,
+                #4e4e4a 72%,
+                #1a1a18 82%,
+                #3c3c38 92%,
+                #0d0d0d 100%
+            );
+        }
+        .mat-mylar::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: repeating-linear-gradient(
+                110deg,
+                transparent 0, transparent 3px,
+                rgba(255,255,255,0.03) 3px, rgba(255,255,255,0.03) 4px
+            );
+        }
+
+        /* STEEL — hot-forged marine-grade, brushed directional grain */
+        .mat-steel {
+            background-color: #111110;
+            background-image:
+                repeating-linear-gradient(
+                    88deg,
+                    rgba(255,255,255,0.025) 0, rgba(255,255,255,0.025) 1px,
+                    transparent 1px, transparent 3px
+                ),
+                linear-gradient(180deg, #1c1c1a 0%, #232320 35%, #161614 60%, #202020 100%);
+        }
         .mat-card-label {
             position: absolute; bottom: 0; left: 0; right: 0;
             padding: 50px 25px 30px;
@@ -698,9 +765,15 @@
         <div class="nav-right">GOA // LIV // AMS &nbsp;|&nbsp; <span>03 UNITS ONLINE</span></div>
     </nav>
 
-    <!-- HERO — DOCK WORKERS · CRANES · CONTAINERS · SHORELINE -->
+    <!-- HERO — CALM MOVING SEA · OFFSHORE PLATFORM -->
     <header class="hero">
-        <div class="hero-bg" id="hero-bg"></div>
+        <div class="hero-bg" id="hero-bg">
+            <video autoplay muted loop playsinline poster="assets/images/archive/Gemini_Generated_Image_na374kna374kna37.png">
+                <source src="assets/video/gemini_generated_video_1AA661BE.mov" type="video/mp4">
+                <source src="assets/video/gemini_generated_video_2AFFF48B.mov" type="video/mp4">
+                <source src="assets/video/gemini_generated_video_9D1D9A17.mov" type="video/mp4">
+            </video>
+        </div>
         <div class="hero-content">
             <div class="hero-eyebrow">INDUSTRIAL UPCYCLE // SINCE 2024</div>
             <h1 data-text="HEAVY MARINE UTILITY.">HEAVY MARINE<br>UTILITY.</h1>
@@ -893,36 +966,32 @@
             <div class="s-tag">// MATERIALS</div>
         </div>
         <div class="materials-grid">
-            <!-- Dacron: woven polyester sailcloth close-up, cream/white woven textile texture from decommissioned racing sails -->
             <div class="mat-card">
-                <img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?q=80&w=600&auto=format&fit=crop" alt="Dacron — Woven Polyester Sailcloth Texture">
+                <div class="mat-texture mat-dacron"></div>
                 <div class="mat-card-label">
                     <div class="mat-name">Dacron</div>
                     <div class="mat-desc">Woven polyester sailcloth. High tensile, UV-hardened, salt-seasoned from years at sea.</div>
                     <div class="mat-origin">↗ Mediterranean Racing Circuit</div>
                 </div>
             </div>
-            <!-- Kevlar: para-aramid fiber weave — distinctive diagonal technical weave pattern from offshore racing hulls -->
             <div class="mat-card">
-                <img src="https://images.unsplash.com/photo-1605792657660-596af9009e82?q=80&w=600&auto=format&fit=crop" alt="Kevlar — Para-Aramid Fiber Weave from Offshore Racing Hulls">
+                <div class="mat-texture mat-kevlar"></div>
                 <div class="mat-card-label">
                     <div class="mat-name">Kevlar</div>
                     <div class="mat-desc">Para-aramid synthetic fiber. 5× stronger than steel by weight. Retired from offshore racing hulls.</div>
                     <div class="mat-origin">↗ North Sea Offshore Fleet</div>
                 </div>
             </div>
-            <!-- Mylar: biaxially-oriented polyester film — reflective metallic sail laminate surface -->
             <div class="mat-card">
-                <img src="https://images.unsplash.com/photo-1567446537708-ac4aa75c9c28?q=80&w=600&auto=format&fit=crop" alt="Mylar — Reflective Biaxially-Oriented Polyester Film Laminate">
+                <div class="mat-texture mat-mylar"></div>
                 <div class="mat-card-label">
                     <div class="mat-name">Mylar</div>
                     <div class="mat-desc">Biaxially-oriented polyester film. Rigid, waterproof, reflective. Structural laminate from decommissioned racing sails.</div>
                     <div class="mat-origin">↗ IRC Racing Fleet, Liverpool</div>
                 </div>
             </div>
-            <!-- Steel: hot-forged marine-grade hardware — rivets, hooks, buckles from Genova dockyard -->
             <div class="mat-card">
-                <img src="https://images.unsplash.com/photo-1504307651254-35680f356dfd?q=80&w=600&auto=format&fit=crop" alt="Forged Steel — Marine-Grade Hardware, Rivets and Hooks from Genova Dockyard">
+                <div class="mat-texture mat-steel"></div>
                 <div class="mat-card-label">
                     <div class="mat-name">Steel</div>
                     <div class="mat-desc">Hot-forged marine-grade hardware. Stainless rivets, camallo hooks, gunmetal buckles. No glue. No thread.</div>
